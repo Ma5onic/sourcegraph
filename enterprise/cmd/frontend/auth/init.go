@@ -33,7 +33,7 @@ func init() {
 }
 
 func ssoSignOutHandler(w http.ResponseWriter, r *http.Request) (signOutURLs []app.SignOutURL) {
-	for _, p := range conf.Get().AuthProviders {
+	for _, p := range conf.Get().Critical.AuthProviders {
 		var e app.SignOutURL
 		var err error
 		switch {
@@ -71,7 +71,7 @@ func init() {
 		}
 
 		var disallowedAuthProviderTypes []string
-		for _, p := range conf.Get().AuthProviders {
+		for _, p := range conf.Get().Critical.AuthProviders {
 			if p.Github != nil || p.Gitlab != nil {
 				disallowedAuthProviderTypes = append(disallowedAuthProviderTypes, conf.AuthProviderType(p))
 			}
