@@ -72,8 +72,8 @@ export ZOEKT_HOST=localhost:6070
 export SRC_HTTP_ADDR=":3081"
 export WEBPACK_DEV_SERVER=1
 
-export DEV_OVERRIDE_CRITICAL_CONFIG=${SOURCEGRAPH_CRITICAL_CONFIG_FILE:-./dev/critical-config.json}
-export DEV_OVERRIDE_SITE_CONFIG=${SOURCEGRAPH_SITE_CONFIG_FILE:-./dev/site-config.json}
+export DEV_OVERRIDE_CRITICAL_CONFIG=${DEV_OVERRIDE_CRITICAL_CONFIG:-./dev/critical-config.json}
+export DEV_OVERRIDE_SITE_CONFIG=${DEV_OVERRIDE_SITE_CONFIG:-./dev/site-config.json}
 
 # WebApp
 export NODE_ENV=development
