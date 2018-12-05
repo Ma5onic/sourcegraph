@@ -2,6 +2,7 @@
 import * as React from 'react'
 import { Subject, Subscription } from 'rxjs'
 import { distinctUntilChanged, map, startWith } from 'rxjs/operators'
+import * as criticalSchema from '../../../../schema/critical.schema.json'
 import './MonacoEditor.scss'
 
 // Monaco imports. These are manually specified due to Parcel / ESM (I think).
@@ -10,8 +11,37 @@ import './MonacoEditor.scss'
 // https://github.com/Microsoft/monaco-editor-samples/blob/master/browser-esm-parcel/src/index.js#L2-L91
 //
 import 'monaco-editor/esm/vs/editor/browser/controller/coreCommands.js'
+import 'monaco-editor/esm/vs/editor/browser/widget/codeEditorWidget.js'
+import 'monaco-editor/esm/vs/editor/contrib/bracketMatching/bracketMatching.js'
+import 'monaco-editor/esm/vs/editor/contrib/caretOperations/caretOperations.js'
+import 'monaco-editor/esm/vs/editor/contrib/caretOperations/transpose.js'
+import 'monaco-editor/esm/vs/editor/contrib/clipboard/clipboard.js'
+import 'monaco-editor/esm/vs/editor/contrib/codelens/codelensController.js'
+import 'monaco-editor/esm/vs/editor/contrib/colorPicker/colorDetector.js'
+import 'monaco-editor/esm/vs/editor/contrib/comment/comment.js'
+import 'monaco-editor/esm/vs/editor/contrib/contextmenu/contextmenu.js'
+import 'monaco-editor/esm/vs/editor/contrib/cursorUndo/cursorUndo.js'
+import 'monaco-editor/esm/vs/editor/contrib/dnd/dnd.js'
 import 'monaco-editor/esm/vs/editor/contrib/find/findController.js'
+import 'monaco-editor/esm/vs/editor/contrib/folding/folding.js'
+import 'monaco-editor/esm/vs/editor/contrib/format/formatActions.js'
+import 'monaco-editor/esm/vs/editor/contrib/gotoError/gotoError.js'
+import 'monaco-editor/esm/vs/editor/contrib/hover/hover.js'
+import 'monaco-editor/esm/vs/editor/contrib/inPlaceReplace/inPlaceReplace.js'
+import 'monaco-editor/esm/vs/editor/contrib/linesOperations/linesOperations.js'
+import 'monaco-editor/esm/vs/editor/contrib/links/links.js'
+import 'monaco-editor/esm/vs/editor/contrib/multicursor/multicursor.js'
+import 'monaco-editor/esm/vs/editor/contrib/parameterHints/parameterHints.js'
+import 'monaco-editor/esm/vs/editor/contrib/referenceSearch/referenceSearch.js'
+import 'monaco-editor/esm/vs/editor/contrib/rename/rename.js'
+import 'monaco-editor/esm/vs/editor/contrib/smartSelect/smartSelect.js'
+import 'monaco-editor/esm/vs/editor/contrib/snippet/snippetController2.js'
+import 'monaco-editor/esm/vs/editor/contrib/suggest/suggestController.js'
+import 'monaco-editor/esm/vs/editor/contrib/wordHighlighter/wordHighlighter.js'
+import 'monaco-editor/esm/vs/editor/contrib/wordOperations/wordOperations.js'
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js'
+import 'monaco-editor/esm/vs/editor/standalone/browser/inspectTokens/inspectTokens.js'
+
 import 'monaco-editor/esm/vs/language/json/monaco.contribution'
 
 interface Props {
@@ -67,6 +97,20 @@ export class MonacoEditor extends React.Component<Props, {}> {
                 })
         )
 
+        const modelUri = monaco.Uri.parse('a://b/foo.json') // a made up unique URI for our model
+        const model = monaco.editor.createModel('', 'json', modelUri)
+
+        monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+            validate: true,
+            schemas: [
+                {
+                    uri: 'https://fake-schema.org/critical-schema.json',
+                    fileMatch: [modelUri.toString()], // associate with our model
+                    schema: criticalSchema,
+                },
+            ],
+        })
+
         // Create the actual Monaco editor.
         monaco.editor.create(this.ref, {
             lineNumbers: 'on',
@@ -84,6 +128,7 @@ export class MonacoEditor extends React.Component<Props, {}> {
             quickSuggestionsDelay: 200,
             wordWrap: 'on',
             theme: 'vs-dark',
+            model,
         })
 
         // Register theme for the editor.
@@ -119,10 +164,17 @@ export class MonacoEditor extends React.Component<Props, {}> {
 
     private onDidCreateModel = (model: monaco.editor.IModel) => {
         this.model = model
-        this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => this.props.onDidSave(), '')
+
+        // Necessary to wrap in setTimeout or else _standaloneKeyBindingService
+        // won't be ready and the editor will refuse to add the command because
+        // it's missing the keybinding service.
+        setTimeout(() => {
+            this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => this.props.onDidSave(), '')
+        })
 
         this.model.setValue(this.props.content)
         monaco.editor.setModelLanguage(this.model, this.props.language)
+        this.model.updateOptions({ tabSize: 2 })
 
         model.onDidChangeContent(e => {
             this.props.onDidContentChange(model.getValue())
