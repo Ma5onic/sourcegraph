@@ -1,6 +1,7 @@
 {
   "name": "management-console",
   "dependencies": {
+    "parcel-plugin-typescript": "^1.0.0",
     "react": "^16.6.3",
     "rxjs": "^6.3.3"
   },
