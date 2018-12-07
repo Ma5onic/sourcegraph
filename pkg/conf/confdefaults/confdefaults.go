@@ -2,7 +2,7 @@
 // deployment types.
 //
 // It is a separate package so that users of pkg/conf do not indirectly import
-// pkg/conf/confdb, which we have a linter to protect against.
+// pkg/db/confdb, which we have a linter to protect against.
 package confdefaults
 
 import (
